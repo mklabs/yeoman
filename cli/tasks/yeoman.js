@@ -2,7 +2,7 @@
 var fs = require('fs'),
   join = require('path').join,
   util = require('util'),
-  h5bp = require('../');
+  h5bp = require('../yeoman');
 
 // ant build script has a nice notion of environment, this defaults to
 // production. And we only support env=prod for now.
@@ -20,8 +20,8 @@ module.exports = function(grunt) {
   // install manually. So we load tasks specifically from our node_modules,
   // with abs path.
   //
-  grunt.loadTasks(join(__dirname, '../node_modules/grunt-jasmine-task/tasks'));
-  grunt.loadTasks(join(__dirname, '../node_modules/grunt-mocha/tasks'));
+  grunt.loadTasks(join(__dirname, '../../node_modules/grunt-jasmine-task/tasks'));
+  grunt.loadTasks(join(__dirname, '../../node_modules/grunt-mocha/tasks'));
 
   // build targets: these are equivalent to grunt alias except that we defined
   // a single task and use arguments to trigger the appropriate target

@@ -2,7 +2,7 @@
 var util = require('util'),
   events = require('events'),
   assert = require('assert'),
-  yeoman = require('../../');
+  yeoman = require('../../yeoman');
 
 describe('yeoman.generators.Base', function() {
 

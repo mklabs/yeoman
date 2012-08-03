@@ -43,7 +43,7 @@
     "ronn": "~0.3.8"
   },
   "scripts": {
-    "test": "node node_modules/mocha/bin/mocha test/test-*.js test/generators/ --globals $",
+    "test": "node node_modules/mocha/bin/mocha cli/test/test-*.js cli/test/generators/ --globals $",
     "manpages": "./cli/scripts/docs-build"
   }
 }

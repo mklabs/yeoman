@@ -5,7 +5,7 @@ var fs = require('fs'),
   util = require('util'),
   events = require('events'),
   fstream = require('fstream'),
-  utils = require('../../../../').utils;
+  utils = require('../../../../yeoman').utils;
 
 // XXX Fetch code may go directly in the fetch method of the Base class
 

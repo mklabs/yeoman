@@ -2,7 +2,7 @@
 var path = require('path'),
   events = require('events'),
   assert = require('assert'),
-  yeoman = require('../../'),
+  yeoman = require('../../yeoman'),
   rimraf = require('rimraf'),
   mkdirp = require('mkdirp'),
   grunt = require('grunt');

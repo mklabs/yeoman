@@ -4,8 +4,8 @@ var fs = require('fs'),
   grunt = require('grunt'),
   colors = require('colors'),
   insight = require('../lib/plugins/insight.js'),
-  yeoman = require('../'),
-  pkg = require('../package.json'),
+  yeoman = require('../../'),
+  pkg = require('../../package.json'),
   _ = grunt.util._,
   async = grunt.util.async,
   compiled = _.template( fs.readFileSync( join(__dirname, 'help.txt'), 'utf8' ));
@@ -16,7 +16,7 @@ function getUserHome() {
 }
 
 // grunt with the plugin registered
-grunt.npmTasks(join(__dirname, '../'));
+grunt.loadTasks(join(__dirname, '../tasks'));
 
 // Get back a reference to the internal grunt cli object so that we can read
 // command line parsed options from grunt, to run our internal additional

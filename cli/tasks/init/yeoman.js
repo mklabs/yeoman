@@ -2,7 +2,7 @@
 var fs = require('fs'),
   path = require('path'),
   colors = require('colors'),
-  yeoman = require('../../'),
+  yeoman = require('../../yeoman'),
   utils = yeoman.utils;
 
 

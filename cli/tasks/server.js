@@ -156,8 +156,8 @@ module.exports = function(grunt) {
   // Tasks & Helpers
   // ===============
 
-  // Retain grunt's built-in server task.
-  grunt.renameTask('server', 'grunt-server');
+  // // Retain grunt's built-in server task.
+  // grunt.renameTask('server', 'grunt-server');
 
   // The server task always run with the watch task, this is done by
   // aliasing the server task to the relevant set of task to run.

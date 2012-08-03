@@ -1,6 +1,6 @@
 
 var util = require('util'),
-  yeoman = require('../../../../');
+  yeoman = require('../../../../yeoman');
 
 // jasmine:app generator
 //

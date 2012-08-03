@@ -1,7 +1,7 @@
 
 var path = require('path'),
   util = require('util'),
-  yeoman = require('../../../../');
+  yeoman = require('../../../../yeoman');
 
 module.exports = Generator;
 
@@ -18,7 +18,7 @@ function Generator() {
     return {
       name: parts[0],
       type: parts[1] || 'string'
-    }
+    };
   });
 
   this.appname = path.basename(process.cwd());

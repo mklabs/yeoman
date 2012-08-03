@@ -1,7 +1,7 @@
 
 var path = require('path'),
   util = require('util'),
-  yeoman = require('../../../../'),
+  yeoman = require('../../../../yeoman'),
   grunt = require('grunt'),
   _ = grunt.util._;
 

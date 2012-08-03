@@ -1,7 +1,7 @@
 
 var fs = require('fs'),
   path = require('path'),
-  utils = require('../').utils,
+  utils = require('../yeoman').utils,
   Ignore = require('fstream-ignore'),
   fstream = require('fstream');
 

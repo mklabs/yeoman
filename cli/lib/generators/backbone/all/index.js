@@ -1,7 +1,7 @@
 
 var path = require('path'),
   util = require('util'),
-  yeoman = require('../../../../');
+  yeoman = require('../../../../yeoman');
 
 module.exports = Generator;
 
@@ -63,7 +63,7 @@ Generator.prototype.injectBackbone = function injectBackbone() {
 Generator.prototype.createDirLayout = function createDirLayout() {
   var self = this;
   this.dirs.forEach(function(dir) {
-    self.log.write('Creating app/js/' + dir + ' directory...')
+    self.log.write('Creating app/js/' + dir + ' directory...');
     self.mkdir(path.join('app/js', dir));
     self.log.ok();
   });
