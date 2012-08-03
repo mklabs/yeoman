@@ -4,12 +4,12 @@
   "description": "The Yeoman CLI presents a command line interface for creating, building, maintaining, and shipping a project.",
   "version": "0.0.1",
   "homepage": "http://yeoman.io",
-  "main": "./yeoman",
+  "main": "./cli/yeoman",
   "bin": {
-    "yeoman": "./bin/yeoman"
+    "yeoman": "./cli/bin/yeoman"
   },
   "directories": {
-    "man": "./man"
+    "man": "./cli/man"
   },
   "engines": {
     "node": ">= 0.8.0"
@@ -44,6 +44,6 @@
   },
   "scripts": {
     "test": "node node_modules/mocha/bin/mocha test/test-*.js test/generators/ --globals $",
-    "manpages": "./scripts/docs-build"
+    "manpages": "./cli/scripts/docs-build"
   }
 }
