@@ -1,9 +1,10 @@
 /*jshint latedef:false*/
 
-var util = require('util'),
-    fs = require('fs'),
-    path = require('path'),
-    yeoman = require('../../../../');
+var fs      = require('fs');
+var util    = require('util');
+var path    = require('path');
+var cheerio = require('cheerio');
+var yeoman  = require('../../../../');
 
 module.exports = AppGenerator;
 
@@ -48,8 +49,8 @@ util.inherits(AppGenerator, yeoman.generators.NamedBase);
 
 
 AppGenerator.prototype.askFor = function askFor (argument) {
-  var cb = this.async(),
-    self = this;
+  var cb   = this.async();
+  var self = this;
 
   // a bit verbose prompt configuration, maybe we can improve that
   // demonstration purpose. Also, probably better to have this in other generator, whose responsability is to ask
@@ -79,7 +80,9 @@ AppGenerator.prototype.askFor = function askFor (argument) {
   }];
 
   this.prompt(prompts, function(e, props) {
-    if(e) { return self.emit('error', e); }
+    if(e) {
+      return self.emit('error', e);
+    }
 
     // manually deal with the response, get back and store the results.
     // We change a bit this way of doing to automatically do this in the self.prompt() method.
@@ -94,7 +97,7 @@ AppGenerator.prototype.askFor = function askFor (argument) {
 };
 
 AppGenerator.prototype.readme = function readme() {
-  this.copy('readme.md', 'readme.md');
+  this.copy( 'readme.md', 'readme.md' );
 };
 
 AppGenerator.prototype.gruntfile = function gruntfile() {
@@ -106,16 +109,18 @@ AppGenerator.prototype.packageJSON = function packageJSON() {
 };
 
 AppGenerator.prototype.git = function git() {
-  this.copy('gitignore', '.gitignore');
-  this.copy('gitattributes', '.gitattributes');
+  this.copy( 'gitignore', '.gitignore' );
+  this.copy( 'gitattributes', '.gitattributes' );
 };
 
 AppGenerator.prototype.fetchH5bp = function fetchH5bp() {
   var cb = this.async();
 
   // Using sha since the lastest tag is so old
-  this.remote('h5bp', 'html5-boilerplate', '456211dc54c7a0328485d73cf25443d210d8e1d8', function(err, remote) {
-    if(err) { return cb(err); }
+  this.remote( 'h5bp', 'html5-boilerplate', '456211dc54c7a0328485d73cf25443d210d8e1d8', function(err, remote) {
+    if(err) {
+      return cb( err );
+    }
 
     remote.copy( '.htaccess', 'app/.htaccess' );
     remote.copy( '404.html', 'app/404.html' );
@@ -130,34 +135,38 @@ AppGenerator.prototype.fetchH5bp = function fetchH5bp() {
 
 AppGenerator.prototype.fetchBootstrap = function fetchBootstrap() {
   // prevent the bootstrap fetch is user said NO
-  if(!this.bootstrap) { return; }
+  if(!this.bootstrap) {
+    return;
+  }
 
-  var cb = this.async(),
-    dest = this.bootstrapLocation;
+  var cb   = this.async();
+  var dest = this.bootstrapLocation;
 
   // third optional argument is the branch / sha1. Defaults to master when ommitted.
-  this.remote('twitter', 'bootstrap', 'v2.0.4', function(err, remote, files) {
-    if(err) { return cb(err); }
+  this.remote( 'twitter', 'bootstrap', 'v2.0.4', function(err, remote, files) {
+    if(err) {
+      return cb( err );
+    }
 
     'alert button carousel collapse dropdown modal popover scrollspy tab tooltip transition typeahead'.split(' ')
-    .forEach(function( el ) {
-      var filename = 'bootstrap-' + el + '.js';
-      remote.copy( 'js/' + filename, 'app/scripts/vendor/bootstrap/' + filename );
-    });
+      .forEach(function( el ) {
+        var filename = 'bootstrap-' + el + '.js';
+        remote.copy( 'js/' + filename, 'app/scripts/vendor/bootstrap/' + filename );
+      });
 
     cb();
   });
 };
 
 AppGenerator.prototype.writeIndex = function writeIndex() {
-
-  var $;
-
   // Resolve path to index.html
   var indexOut = path.resolve('app/index.html');
 
   // Read in as string for further update
-  var indexData = this.readFileAsString(indexOut);
+  var indexData = this.readFileAsString( indexOut );
+
+  // setup the jQuery like cheerio instance
+  var $ = cheerio.load( indexData );
 
   // Prepare default content text
   var defaults = ['HTML5 Boilerplate','Twitter Bootstrap'];
@@ -170,15 +179,14 @@ AppGenerator.prototype.writeIndex = function writeIndex() {
   ];
 
   // Strip sections of H5BP we're going to overwrite
-  indexData = this.removeScript(indexData, 'js/plugins.js');
-  indexData = this.removeScript(indexData, 'js/main.js');
-  indexData = this.removeStyle(indexData, 'css/normalize.css');
+  indexData = this.removeScript( indexData, 'js/plugins.js' );
+  indexData = this.removeScript( indexData, 'js/main.js' );
+  indexData = this.removeStyle( indexData, 'css/normalize.css' );
 
-  indexData = indexData.replace(/js\/vendor\/jquery[^"]+/g, 'scripts/vendor/jquery.min.js');
+  indexData = indexData.replace( /js\/vendor\/jquery[^"]+/g, 'scripts/vendor/jquery.min.js' );
 
-  $ = require('cheerio').load( indexData );
-  $('link[href="css/main.css"]').attr('href', 'styles/main.css');
-  $('script[src^="js/vendor/modernizr"]').attr('src', 'scripts/vendor/modernizr.min.js');
+  $('link[href="css/main.css"]').attr( 'href', 'styles/main.css' );
+  $('script[src^="js/vendor/modernizr"]').attr( 'src', 'scripts/vendor/modernizr.min.js' );
   indexData = $.html();
 
   // Asked for Twitter bootstrap plugins?
@@ -186,12 +194,8 @@ AppGenerator.prototype.writeIndex = function writeIndex() {
 
     defaults.push('Twitter Bootstrap plugins');
 
-/*
-    indexData = this.appendStyles(indexData, 'styles/bootstrap-min.css',[
-     'styles/bootstrap.css' ]);*/
-
     // Wire Twitter Bootstrap plugins (usemin: scripts/plugins.js)
-    indexData = this.appendScripts(indexData, 'scripts/plugins.js', [
+    indexData = this.appendScripts( indexData, 'scripts/plugins.js', [
       'scripts/vendor/bootstrap/bootstrap-alert.js',
       'scripts/vendor/bootstrap/bootstrap-dropdown.js',
       'scripts/vendor/bootstrap/bootstrap-tooltip.js',
@@ -231,90 +235,94 @@ AppGenerator.prototype.writeIndex = function writeIndex() {
   ]);
 
   // Append the default content
-  indexData = indexData.replace('<body>', '<body>\n' + contentText.join('\n'));
+  indexData = indexData.replace( '<body>', '<body>\n' + contentText.join('\n') );
 
   // Write out final file
-  this.writeFileFromString(indexData, indexOut);
+  this.writeFileFromString( indexData, indexOut );
 };
 
 // XXX to be put in a subgenerator like rjs:app, along the fetching or require.js /
 // almond lib
-AppGenerator.prototype.requirejs = function requirejs(){
-  var cb = this.async(),
-    self = this;
-
-  if(self.includeRequireJS){
-
-    this.remote('jrburke', 'requirejs', '2.0.5', function(err, remote) {
-      if(err) { return cb(err); }
-      remote.copy('require.js', 'app/scripts/vendor/require.js');
-
-      // Wire RequireJS/AMD (usemin: js/amd-app.js)
-      var body = self.read(path.resolve('app/index.html'));
-      body = self.appendScripts(body, 'scripts/amd-app.js', ['scripts/vendor/require.js'], {
-        'data-main': 'main'
-      });
-      self.write('app/index.html', body);
-
-      // add a basic amd module (should be a file in templates/)
-      self.write('app/scripts/app.js',[
-        "define([], function() {",
-        "    return 'Hello from Yeoman!'",
-        "});"
-      ].join('\n'));
-
-      self.write('app/scripts/main.js', [
-        "require.config({",
-        "  shim:{",
-        "  },",
-        "  paths: {",
-        "    jquery: 'app/scripts/vendor/jquery.min'",
-        "  }",
-        "});",
-        " ",
-        "require(['app'], function(app) {",
-        "    // use app here",
-        "    console.log(app);",
-        "});"
-      ].join('\n'));
-
-      cb();
-    });
-
-  } else {
-    cb();
+AppGenerator.prototype.requirejs = function requirejs() {
+  if(!this.includeRequireJS) {
+    return;
   }
+
+  var cb   = this.async();
+  var self = this;
+
+
+  this.remote( 'jrburke', 'requirejs', '2.0.5', function(err, remote) {
+    if(err) {
+      return cb( err );
+    }
+
+    remote.copy( 'require.js', 'app/scripts/vendor/require.js' );
+
+    // Wire RequireJS/AMD (usemin: js/amd-app.js)
+    var body = self.read( path.resolve('app/index.html') );
+    body = self.appendScripts( body, 'scripts/amd-app.js', ['scripts/vendor/require.js'], {
+      'data-main': 'main'
+    });
+    self.write( 'app/index.html', body );
+
+    // add a basic amd module (should be a file in templates/)
+    self.write( 'app/scripts/app.js', [
+      "define([], function() {",
+      "    return 'Hello from Yeoman!'",
+      "});"
+    ].join('\n'));
+
+    self.write( 'app/scripts/main.js', [
+      "require.config({",
+      "  shim:{",
+      "  },",
+      "  paths: {",
+      "    jquery: 'app/scripts/vendor/jquery.min'",
+      "  }",
+      "});",
+      " ",
+      "require(['app'], function(app) {",
+      "    // use app here",
+      "    console.log(app);",
+      "});"
+    ].join('\n'));
+
+    cb();
+  });
+
 };
 
 
-AppGenerator.prototype.requirehm = function requirehm(){
-  var cb = this.async(),
-    self = this;
-
-  if(self.includeRequireHM){
-
-    this.remote('jrburke', 'require-hm', '0.2.1', function(err, remote) {
-      if(err) { return cb(err); }
-      remote.copy('hm.js', 'app/scripts/vendor/hm.js');
-      remote.copy('esprima.js', 'app/scripts/vendor/esprima.js');
-
-
-      // Wire RequireJS/AMD (usemin: js/amd-app.js)
-      var mainjs = self.read(path.resolve('app/scripts/main.js'));
-      mainjs = mainjs.replace('require.config({', 'require.config({\n  hm: "app/hm",\n');
-      mainjs = mainjs.replace('paths: {', 'paths: {\n    esprima: \'app/scripts/esprima\',');
-      self.write('app/scripts/main.js', mainjs);
-      cb();
-    });
-
-  } else {
-    cb();
+AppGenerator.prototype.requirehm = function requirehm() {
+  if(!this.includeRequireHM) {
+    return;
   }
+
+  var cb   = this.async();
+  var self = this;
+
+  this.remote( 'jrburke', 'require-hm', '0.2.1', function(err, remote) {
+    if(err) {
+      return cb( err );
+    }
+
+    remote.copy('hm.js', 'app/scripts/vendor/hm.js');
+    remote.copy('esprima.js', 'app/scripts/vendor/esprima.js');
+
+
+    // Wire RequireJS/AMD (usemin: js/amd-app.js)
+    var mainjs = self.read(path.resolve('app/scripts/main.js'));
+    mainjs = mainjs.replace('require.config({', 'require.config({\n  hm: "app/hm",\n');
+    mainjs = mainjs.replace('paths: {', 'paths: {\n    esprima: \'app/scripts/esprima\',');
+    self.write('app/scripts/main.js', mainjs);
+    cb();
+  });
 };
 
-AppGenerator.prototype.writeMain = function writeMain(){
+AppGenerator.prototype.writeMain = function writeMain() {
   this.log.writeln('Writing compiled Bootstrap');
-  this.template('main.css', path.join('app/styles/bootstrap.css'));
+  this.template( 'main.css', path.join('app/styles/bootstrap.css') );
 };
 
 AppGenerator.prototype.app = function app() {
