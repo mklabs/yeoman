@@ -29,8 +29,9 @@ describe('yeoman.generators.Base', function() {
     this.Dummy = Dummy;
 
     // actual generator
-    this.generator = yeoman.generators.setup(grunt)
-        .create('app', [], {}, {});
+    yeoman.generators.setup(grunt);
+
+    this.generator = yeoman.generators.create('app', [], {}, grunt.config());
   });
 
   // cleaup the test dir, and cd into it

@@ -5,4 +5,5 @@
 
 --globals events
 --globals AssertionError
+--globals requirejsVars
 --globals TAP_Global_Harness

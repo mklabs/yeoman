@@ -1,5 +1,6 @@
 /*global describe:true, before:true, it: true */
 var fs      = require('fs');
+var path    = require('path');
 var grunt   = require('grunt');
 var helpers = require('./helpers');
 var assert  = require('assert');
@@ -34,6 +35,7 @@ describe('yeoman config', function() {
 
     it('should match our expected values and <paths:...> directive should be properly expanded', function() {
       // Initialize task system so that grunt internally read / init the config.
+      grunt.task.loadTasks(path.join(__dirname, '../tasks'));
       grunt.task.init([]);
 
       assert.deepEqual(grunt.config('bower'), {
@@ -95,7 +97,10 @@ describe('yeoman config', function() {
         all: ['test/**/*.html']
       });
       assert.deepEqual(grunt.config('css'), {
-        'styles/main.css': ['styles/**/*.css']
+        main: {
+          src: ['styles/**/*.css'],
+          dest: 'styles/main.css'
+        }
       });
       assert.deepEqual(grunt.config('mocha'), {
         all: ['test/**/*.html']

@@ -1,3 +1,4 @@
+/*jshint latedef: false */
 
 var util = require('util'),
   yeoman = require('../../../../');
@@ -39,6 +40,6 @@ function Generator(args, options, config) {
 util.inherits(Generator, yeoman.generators.Base);
 
 Generator.prototype.setupEnv = function setupEnv() {
-  this.directory('.', 'test');
+  this.directory('.', this.config.paths.test);
 };
 

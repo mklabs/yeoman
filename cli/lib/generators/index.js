@@ -95,17 +95,22 @@ generators.setup = function setup(grunt) {
   // gruntfile may be in another project up to this path), otherwise let the
   // default cwd be (mainly for app generator).
   if(generators.gruntfile) {
+    // cd into that base, all generators should write relative to the
+    // application root.
+    process.chdir(generators.base);
+
     // init the grunt config if a Gruntfile was found
     try {
-      require(generators.gruntfile).call(grunt, grunt);
+      grunt.task.init([]);
     } catch( e ) {
       grunt.log.write( e.message ).error().verbose.error( e.stack) .or.error( e );
     }
-
-    // and cd into that base, all generators should write relative to the
-    // application root.
-    process.chdir(generators.base);
   }
+
+  // setup and process the paths handling, for generators to have them
+  // available as self.config.paths
+  grunt.loadTasks(path.join(__dirname, '../../tasks'));
+  grunt.helper('paths:process');
 
   // try to locate locally installed yeoman plugin
   generators.plugins = grunt.file.expandDirs('node_modules/yeoman-*');
@@ -283,9 +288,7 @@ generators.create = function create(namespace, args, options, gruntConfig) {
 
     hook.context = resolved + ':' + (hook.as || name);
     hook.args = hook.args || args;
-    hook.config = hook.config || config;
-    hook.options = hook.options || options;
-    hook.generator = generators.create(hook.context, hook.args, hook.options, hook.config, true);
+    hook.generator = generators.create(hook.context, hook.args, options, gruntConfig, true);
     return hook;
   });
 
@@ -464,17 +467,24 @@ generators.namespacesToPaths = function namespacesToPaths(namespaces) {
 //
 // Used to setup the Grunt init template warnOn property at runtime.
 generators.warnOn = function warnOn(grunt) {
+  if(!grunt.config('paths')) {
+    grunt.task.init([]);
+    grunt.helper('paths:process');
+  }
+
   // name of the generator to invoke, as resolved in prepare step
   var name = generators.name || '';
   // options, from grunt.cli
   var opts = generators.options;
   // generator arguments, from grunt.cli.tasks minus generator name
   var args = generators.args;
-  // Grunt config, from gruntfile
-  var config = grunt.config() || {};
 
-  // Attempt to locate and create the generator
-  var generator = generators.setup(grunt).create(name, args, opts, config);
+  // Attempt to locate and create the generator, optionnaly processing
+  // any <paths:..> in found gruntfile
+  generators.setup(grunt);
+
+  // Grunt config, from gruntfile, create the generator
+  var generator = generators.create(name, args, opts, grunt.config() || {});
 
   // invalid generator, or empty warnings warn on nothing
   return generator && generator._warns.length ? generator._warns : '';

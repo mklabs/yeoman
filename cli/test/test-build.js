@@ -84,10 +84,6 @@ describe('yeoman init && yeoman build', function() {
       fs.stat('app/', done);
     });
 
-    it('should generate a spec/ directory', function(done) {
-      fs.stat('spec/', done);
-    });
-
     it('should generate a test/ directory', function(done) {
       fs.stat('test/', done);
     });

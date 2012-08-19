@@ -22,7 +22,6 @@ module.exports = {
   // specify an alternate install location for Bower
   bower: 'app/scripts/vendor',
 
-
   // Application directory paths
   // ---------------------------
   //

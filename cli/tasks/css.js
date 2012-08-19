@@ -15,7 +15,6 @@ module.exports = function(grunt) {
   grunt.task.registerMultiTask('css', 'Concats, replaces @imports and minifies the CSS files', function() {
     this.requiresConfig('staging');
 
-    console.log(this);
     // if defined, files get prepended by the output config value
     var files = this.file.src;
 
@@ -50,7 +49,6 @@ module.exports = function(grunt) {
     o = o || {};
     files = grunt.file.expandFiles(files);
     return files.map(function(filepath) {
-      console.log(filepath);
       var content = grunt.file.read(filepath);
       return o.nocompress ? content : cleanCSS.process(content);
     }).join('');

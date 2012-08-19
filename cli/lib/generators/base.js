@@ -131,12 +131,10 @@ Base.prototype.runHooks = function runHooks(cb) {
     }
 
     var resolved = self.defaultFor(hook.name),
-      gruntConfig = hook.config || self.config,
-      options = hook.options || self.options,
       context = hook.as || self.generatorName,
       args = hook.args || self.args;
 
-    self.invoke(resolved + ':' + context, args, options, gruntConfig, function(err) {
+    self.invoke(resolved + ':' + context, args, self.options, self.config, function(err) {
       if ( err ) {
         return cb( err );
       }
