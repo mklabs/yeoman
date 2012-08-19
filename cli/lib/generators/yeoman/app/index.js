@@ -1,3 +1,4 @@
+/*jshint latedef:false*/
 
 var util = require('util'),
     fs = require('fs'),
@@ -6,10 +7,22 @@ var util = require('util'),
 
 module.exports = AppGenerator;
 
-// this example defines a prompt-app generator for demonstration purpose.
+// This generator is the main generator triggered on `yeoman init`.
 //
-// So we need to hook other generators with the appropriate context (stylesheet-engine mainly)
-
+// It delegetes the sass and test directories creation through hooks to
+// according generators:
+//
+// - sass:app (hook: stylesheet-engine)
+// - mocha:app (hook: test-framework)
+//
+// Those hooks can be changed using cli flags when `yeoman init` is ran:
+//
+//      yeoman init --test-framework jasmine --stylesheet-engine less
+//
+// Provided that a less:app generator is available in one of the generator load
+// path, it allows you to specifically change the sass part of the generator to
+// instead generates you a less setup. Jasmine generator is provided by default
+// with yeoman (even if not used with the default setup)
 
 function AppGenerator(args, options, config) {
   yeoman.generators.Base.apply(this, arguments);
@@ -19,16 +32,15 @@ function AppGenerator(args, options, config) {
 
   // cleanup the name property from trailing /, typical usage of directories.
   // update the args object, it's used to initialize js-framework hooks
-  if(this.name) this.args[0] = this.args[0].replace(/\/$/, '');
-
-  // hook for bootstrap may be readded. For demo purpose, done in this generator directly.
-  // this.hookFor('javascript-engine', { as: 'app' });
+  if(this.name) {
+    this.args[0] = this.args[0].replace(/\/$/, '');
+  }
 
   // resolved to sass by default (could be switched to less for instance)
-  this.hookFor('stylesheet-engine', { as: 'app' });
+  this.hookFor('stylesheet-engine');
 
   // resolved to mocha by default (could be switched to jasmine for instance)
-  this.hookFor('test-framework', { as: 'app' });
+  this.hookFor('test-framework');
 
 }
 
