@@ -79,7 +79,7 @@ AppGenerator.prototype.askFor = function askFor (argument) {
     warning: 'Yes: RequireHM will be placed into the JavaScript vendor directory.'
   }];
 
-  this.prompt(prompts, function(e, props) {
+  this.prompt( prompts, function(e, props) {
     if(e) {
       return self.emit('error', e);
     }
@@ -102,6 +102,7 @@ AppGenerator.prototype.readme = function readme() {
 
 AppGenerator.prototype.gruntfile = function gruntfile() {
   this.template('Gruntfile.js');
+  this.copy( 'paths.js', 'config/paths.js' );
 };
 
 AppGenerator.prototype.packageJSON = function packageJSON() {

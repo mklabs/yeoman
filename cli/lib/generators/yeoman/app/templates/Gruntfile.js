@@ -8,18 +8,19 @@ module.exports = function( grunt ) {
   grunt.initConfig({
 
     // Project configuration
-    // ---------------------
+    // --------------------
 
-    // specify an alternate install location for Bower
+    // specify an alternate install location for Bower,
+    // this will copy resolved files to this specific directory
     bower: {
-      dir: 'app/scripts/vendor'
+      dir: '<paths:bower>'
     },
 
     // Coffee to JS compilation
     coffee: {
       dist: {
-        src: 'app/scripts/**/*.coffee',
-        dest: 'app/scripts'
+        src: '<paths:app>/<paths:scripts>/**/*.coffee',
+        dest: '<paths:app>/<paths:scripts>'
       }
     },
 
@@ -28,10 +29,10 @@ module.exports = function( grunt ) {
       dist: {
         // http://compass-style.org/help/tutorials/configuration-reference/#configuration-properties
         options: {
-          css_dir: 'styles',
-          sass_dir: 'styles',
-          images_dir: 'images',
-          javascripts_dir: 'scripts',
+          css_dir: '<paths:styles>',
+          sass_dir: '<paths:styles>',
+          images_dir: '<paths:images>',
+          javascripts_dir: '<paths:scripts>',
           force: true
         }
       }
@@ -44,7 +45,7 @@ module.exports = function( grunt ) {
 
     // headless testing through PhantomJS
     <%= test_framework %>: {
-      all: ['test/**/*.html']
+      all: ['<paths:test>/**/*.html']
     },
 
     // default watch configuration
@@ -55,16 +56,16 @@ module.exports = function( grunt ) {
       },
       compass: {
         files: [
-          'app/styles/**/*.{scss,sass}'
+          '<paths:app>/<paths:styles>/**/*.{scss,sass}'
         ],
         tasks: 'compass reload'
       },
       reload: {
         files: [
-          'app/*.html',
-          'app/styles/**/*.css',
-          'app/scripts/**/*.js',
-          'app/images/**/*'
+          '<paths:app>/*.html',
+          '<paths:app>/<paths:styles>/**/*.css',
+          '<paths:app>/<paths:scripts>/**/*.js',
+          '<paths:app>/<paths:images>/**/*'
         ],
         tasks: 'reload'
       }
@@ -75,13 +76,22 @@ module.exports = function( grunt ) {
     lint: {
       files: [
         'Gruntfile.js',
-        'app/scripts/**/*.js',
-        'spec/**/*.js'
+        '<paths:app>/<paths:scripts>/**/*.js',
+        '<paths:test>/**/*.js'
       ]
     },
 
     // specifying JSHint options and globals
     // https://github.com/cowboy/grunt/blob/master/docs/task_lint.md#specifying-jshint-options-and-globals
+    //
+    // You may also choose to store them in a `.jshintrc` file next to this
+    // gruntfile and change it to be:
+    //
+    //
+    //    jshint: {
+    //      options: '<json:.jshintrc>'
+    //    }
+    //
     jshint: {
       options: {
         curly: true,
@@ -105,12 +115,12 @@ module.exports = function( grunt ) {
     // -------------------
 
     // the staging directory used during the process
-    staging: 'temp',
+    staging: '<paths:staging>',
     // final build output
-    output: 'dist',
+    output: '<paths:output>',
 
     mkdirs: {
-      staging: 'app/'
+      staging: '<paths:app>'
     },
 
     // Below, all paths are relative to the staging directory, which is a copy
@@ -120,15 +130,18 @@ module.exports = function( grunt ) {
 
     // concat css/**/*.css files, inline @import, output a single minified css
     css: {
-      'styles/main.css': ['styles/**/*.css']
+      main: {
+        src: ['<paths:styles>/**/*.css'],
+        dest: '<paths:styles>/main.css'
+      }
     },
 
     // renames JS/CSS to prepend a hash of their contents for easier
     // versioning
     rev: {
-      js: 'scripts/**/*.js',
-      css: 'styles/**/*.css',
-      img: 'images/**'
+      js: '<paths:scripts>/**/*.js',
+      css: '<paths:styles>/**/*.css',
+      img: '<paths:images>/**'
     },
 
     // usemin handler should point to the file containing
@@ -165,10 +178,120 @@ module.exports = function( grunt ) {
       optimize: 'none',
       baseUrl: './scripts',
       wrap: true
-    },
+    }
   });
 
   // Alias the `test` task to run the `mocha` task instead
   grunt.registerTask('test', '<%= test_framework %>');
+
+
+  // special paths resolving helper, should be put in another place once ok.
+
+  // Its role is to handle the resolving of path configuration value accross
+  // several possible places, with the following order or precendence:
+  //
+  // - ./config/paths.js          - next to application gruntfile
+  // - ~/.yeoman/config/paths.js  - in user's home directory, for system-wide
+  //                                paths accross multiple projects
+  //
+  // And default values in this path grunt helper.
+  //
+  // We need to handle some sort of caching for these paths, read only once
+  // and then reused from memory. We use the grunt config object for that.
+  grunt.registerHelper( 'paths', function(value) {
+    var paths = grunt.helper('paths:init');
+    // `scripts`, `styles` and `images` are resolved below the `app` value.
+    return paths[value] || '';
+  });
+
+  var path = require('path');
+
+  // Takes care of initing the grunt configuration and cache the path values
+  // from various source, including:
+  //
+  // - ./config/paths.js          - next to application gruntfile
+  // - ~/.yeoman/config/paths.js  - in user's home directory, for system-wide
+  //                                paths accross multiple projects
+  grunt.registerHelper( 'paths:init', function() {
+    var paths = grunt.config( 'paths.config' );
+    if(paths) {
+      return paths;
+    }
+
+    // appconfig refers to the application paths config (in ./config/paths.{js|coffee})
+    var appconfig = grunt.config('paths.appconfig') || grunt.helper( 'paths:require', './config/paths' );
+
+    // userconfig is matching the system-wide path configuration for the
+    // current user (in ~/.yeoman/config/paths.{js|coffee})
+    var userconfig = grunt.config('paths.userconfig') || grunt.helper( 'paths:require', '~/.yeoman/config/paths' );
+
+    // merge the two (not a deep extend, paths here should be a flat list of
+    // possible paths)
+    paths = grunt.util._.defaults(appconfig, userconfig, {
+      app: 'app',
+      test: 'test',
+      output: 'dist',
+      staging: 'temp',
+      scripts: 'scripts',
+      styles: 'styles',
+      images: 'images'
+    });
+
+    // update the cache
+    grunt.config( 'paths.appconfig', appconfig );
+    grunt.config( 'paths.userconfig', userconfig );
+    grunt.config( 'paths.config', paths );
+
+    return paths;
+  });
+
+  // A special purpose `require` wrapper. When the `pathname` begins with `~/`,
+  // then its value is prefixed by the user $HOME dir in a cross-system
+  // friendly way.
+  //
+  // - pathname - A string value that is simply pass through node's `require`.
+  //
+  // Returns the given module or `{}`.
+  grunt.registerHelper( 'paths:require', function(pathname) {
+    var home = /^~\//;
+    // sweet home
+    var homepath = process.env[process.platform === 'win32' ? 'USERPROFILE' : 'HOME'];
+    if(home.test( pathname )) {
+      pathname = pathname.replace( home, path.join(homepath, '/') );
+    }
+
+    try {
+      return require( pathname );
+    } catch(e) {
+      return {};
+    }
+  });
+
+  // Recursively expand yeoman specific config directives. By default, grunt
+  // only expands config and json directives.
+  var config = grunt.config();
+  var directiveRe = /<([^>]*)>/g;
+  config = grunt.util.recurse( config, function(value) {
+    if (typeof value !== 'string') { return value; }
+    // grunt internally only handle values as String or Array with a pattern
+    // like `^<(.*)>$`, here we want to be able to parse multiple directives
+    //
+    //    var parts = grunt.task.getDirectiveParts( value ) || [];
+    //
+    var directives = value.match(directiveRe) || [];
+    directives.forEach(function(directive) {
+      // Split the name into parts.
+      var parts = directive.replace(/^<|>$/g, '').split(':');
+      // If a matching helper was found, process the directive.
+      if(grunt.task._helpers[parts[0]]) {
+        value = value.replace(directive, grunt.task.directive(directive));
+      }
+    });
+    return value;
+  });
+
+  // make sure to re init (update) the config object of grunt (returns a
+  // shallow clone of the actual config data)
+  grunt.initConfig(config);
 
 };
