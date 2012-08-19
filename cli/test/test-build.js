@@ -46,7 +46,7 @@ describe('yeoman init && yeoman build', function() {
         .expect(/Invoke sass:app/)
         .expect(/Writing app\/styles\/main\.scss/)
         .expect(/Writing app\/styles\/_compass_twitter_bootstrap\.scss/)
-        .expect(/Writing app\/styles\/_compass_twitter_bootstrap\/(.+).scss/)
+        .expect(/Writing app\/styles\/compass_twitter_bootstrap\/(.+).scss/)
 
         // test hook - jasmine:app
         .expect(/Invoke mocha:app/)
