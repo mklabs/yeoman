@@ -58,6 +58,10 @@ module.exports = function(grunt) {
     grunt.log.subhead('Running ' + target + ' target')
       .writeln('  - ' + grunt.log.wordlist(tasks.split(' '), { separator: ' ' }));
 
+    // make sure to update the configuration and process any kind of <%= %> base
+    // value. Grunt will handle that for us with grunt.config.get()
+    grunt.helper('config:process');
+
     grunt.task.run(tasks);
   });
 
@@ -95,6 +99,43 @@ module.exports = function(grunt) {
   // Output some info on given object, using util.inspect, using colorized output.
   grunt.registerHelper('inspect', function(o) {
     return util.inspect(o, false, 4, true);
+  });
+
+
+  // config:process helper is a special helper to recursively process any
+  // config value <%= stuff %> with the actual grunt config.  trigger our
+  // specific config:process helper.
+  //
+  // will somewhat be replaced by the new config API that is coming with grunt
+  // 0.4.x (https://github.com/cowboy/grunt/issues/396)
+  grunt.registerHelper( 'config:process', function() {
+    var config = grunt.config();
+    config = grunt.util.recurse( config, function(value) {
+      // grunt will do this much better, right now we just ignore any non
+      // string stuff
+      if (typeof value !== 'string') { return value; }
+      return grunt.template.process( value, config );
+    });
+
+    // not that great.. Specific stuff about css config. grunt.util.recurse
+    // only allows us to process values, not keys. And the CSS config relies on
+    // the subtarget task name to guess the output, should be refactored to use
+    // src / dest config like coffee does.
+    //
+    // go through css subtargets, process the key and update the config.
+    Object.keys( config.css ).forEach(function(key) {
+      // process the value
+      var result = grunt.template.process( key );
+      // update the config with the new key (may be the same)
+      config.css[result] = config.css[key];
+      // delete the old one
+      if(result !== key) {
+        delete config.css[key];
+      }
+    });
+
+    // set it back in config
+    grunt.initConfig( config );
   });
 
 };
