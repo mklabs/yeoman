@@ -42,11 +42,11 @@ module.exports = function(grunt) {
       .on('error', grunt.fatal.bind(grunt.fail))
       .on('data', grunt.log.writeln.bind(grunt.log))
       .on('end', function(){
-        if(args[0] === 'install' && directory){
+        if(args[0] === 'install' && directory) {
           grunt.helper('bower:copy', directory, cb);
-        }else if(args[0] === 'uninstall' || args[0] === 'update' && directory){
+        } else if(args[0] === 'uninstall' || args[0] === 'update' && directory) {
           grunt.helper('bower:sync', directory, cb);
-        }else{
+        } else {
           cb();
         }
       });
@@ -83,57 +83,59 @@ module.exports = function(grunt) {
     var indexBuffer = fs.readFileSync(appIndexPath, 'utf8');
 
     // parse data-main for require config path
-    var hasDataMain = /data-main=['"]([^'"]+)['"]/.test( indexBuffer );
-
-    // If data-main is detected..
-    if(hasDataMain){
-      
-      grunt.helper('bower:log', 'updating RequireJS config');
-
-      bower.commands.list({ paths: true })
-        .on('error', grunt.fatal.bind(grunt.fail))
-        .on('data', function(deps) {
-
-          // should probably emit on `end` in bower's internal
-          if(typeof deps === 'string') { return; }
-
-          // Handler for RequireJS app config.
-          // Wires up the relevant RequireJS paths config when
-          // running `yeoman install spine backbone` etc.
-
-            var requireConfigPath = basePath + '/' + hasDataMain[1];
-
-            // check path contains .js, append if not
-            if ( requireConfigPath.indexOf('.js') ) {
-              requireConfigPath += '.js';
-            }
-            // check config file exists
-            if(grunt.file.exists(requireConfigPath)){
-
-              console.log('require config exists, doing stuff');
-                // if so..
-                // iterate over Bower deps, generating the path string fo config
-                Object.keys(deps).forEach(function(dep){
-                  // Quote key if it contains non a-z chars
-                  var key = /[^\w]/.test( dep ) ? '\'' + dep + '\'' : dep;
-                  scripts+= "    " + key + ": '../../" + deps[dep].replace('.js','') + "',\n";
-                });
-
-                // read in the existing data-main config
-                var cf = fs.readFileSync(requireConfigPath, 'utf8');
-                // replace the existing paths with your new paths
-                var html = cf.replace(' paths: {', 'paths: {\n' + scripts);
-
-                // Write the paths to config
-                fs.writeFileSync(requireConfigPath, html, 'utf8');
-            }
-      });
-    }
+    var datamain = /data-main=['"]([^'"]+)['"]/;
 
     // Syncronize the components directory with the vendor directory
-    grunt.helper('bower:sync', dir, cb);
-    cb();
+    // if we're not having an rjs setup, go through synchronize step directly
+    if(!datamain.test(indexBuffer)) return grunt.helper('bower:sync', dir, cb);
 
+    // store the relative filepath of the rjs entry point
+    var filepath = indexBuffer.match(datamain)[1];
+
+    // otherwise, request bower for deps listing and update the relevant config
+    // while going through to synchronize step when done
+    grunt.helper('bower:log', 'updating RequireJS config');
+    bower.commands.list({ paths: true })
+      .on('error', grunt.fatal.bind(grunt.fail))
+      .on('data', function(deps) {
+        // should probably emit on `end` in bower's internal
+        if(typeof deps === 'string') { return; }
+
+        // Handler for RequireJS app config.
+        // Wires up the relevant RequireJS paths config when
+        // running `yeoman install spine backbone` etc.
+
+        var requireConfigPath = basePath + '/' + filepath;
+
+        // check path contains .js, append if not
+        if ( requireConfigPath.indexOf('.js') ) {
+          requireConfigPath += '.js';
+        }
+
+        // check config file exists
+        var configExists = grunt.file.exists(requireConfigPath);
+        if(configExists) {
+          grunt.helper('bower:log', 'Updating RequireJS config: ' + requireConfigPath);
+          // if so..
+          // iterate over Bower deps, generating the path string fo config
+          Object.keys(deps).forEach(function(dep){
+            // Quote key if it contains non a-z chars
+            var key = /[^\w]/.test( dep ) ? '\'' + dep + '\'' : dep;
+            scripts+= "    " + key + ": '../../" + deps[dep].replace('.js','') + "',\n";
+          });
+
+          // read in the existing data-main config
+          var cf = fs.readFileSync(requireConfigPath, 'utf8');
+          // replace the existing paths with your new paths
+          var html = cf.replace(' paths: {', 'paths: {\n' + scripts);
+
+          // Write the paths to config
+          fs.writeFileSync(requireConfigPath, html, 'utf8');
+        }
+
+        // end the process
+        grunt.helper('bower:sync', dir, cb);
+      });
   });
 
 
