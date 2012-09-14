@@ -252,7 +252,7 @@ module.exports = function(grunt) {
         }
     });
 
-    if(target === 'app') {
+    if ( (target === 'app') || ( target == 'test') ) {
       // when serving app, make sure to delete the temp/ dir from w/e was
       // previously compiled here, and trigger compass / coffee mostly to make
       // sure, those files are compiled and not revved.
@@ -272,14 +272,22 @@ module.exports = function(grunt) {
       middleware.push( grunt.helper('reload:inject', opts) );
     }
 
-    middleware = middleware.concat([
-      // also serve static files from the temp directory, and before the app
-      // one (compiled assets takes precedence over same pathname within app/)
-      connect.static(path.join(opts.base, '../temp')),
-      // Serve static files.
-      connect.static(opts.base),
+    // also serve static files from the temp directory, and before the app
+    // one (compiled assets takes precedence over same pathname within app/)
+    middleware.push(connect.static(path.join(opts.base, '../temp')));
+    // Serve static files.
+    middleware.push(connect.static(opts.base))
+   // Make empty directories browsable.
+    middleware.push(connect.directory(opts.base))
+
+    if (opts.target === 'test') {
+      // We need to expose our code as well
+      middleware.push(connect.static(path.resolve('app')));
       // Make empty directories browsable.
-      connect.directory(opts.base),
+      middleware.push(connect.directory(path.resolve('app')));
+    }
+
+    middleware = middleware.concat([
       // Serve the livereload.js script
       connect.static(path.join(__dirname, 'livereload')),
       // To deal with errors, 404 and alike.
