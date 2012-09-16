@@ -169,10 +169,6 @@ module.exports = function(grunt) {
   // Retain grunt's built-in server task.
   grunt.renameTask('server', 'grunt-server');
 
-  // The server task always run with the watch task, this is done by
-  // aliasing the server task to the relevant set of task to run.
-  grunt.registerTask('server', 'yeoman-server watch');
-
   // Reload handlers
   // ---------------
 
@@ -204,24 +200,27 @@ module.exports = function(grunt) {
   grunt.registerTask('server', 'Launch a preview, LiveReload compatible server', function(target) {
     var opts;
     // Get values from config, or use defaults.
-    var port = grunt.config('server.port') || 0xDAD;
 
     // async task, call it (or not if you wish to use this task standalone)
     var cb = this.async();
 
-    // valid target are app (default), prod and test
-    var targets = {
-      // these paths once config and paths resolved will need to pull in the
-      // correct paths from config
-      app: path.resolve('app'),
-      dist: path.resolve('dist'),
-      test: path.resolve('test'),
+    // Targets are either a single String or an Array of relative pathname to
+    // configure as connect.static() root directories. Orders matters, connect
+    // will go through each of these paths in order and serve the very first
+    // match for a given pathname (ex. styles/main.css)
+    //
+    // You can configure additionnal targets, or overrides existsing one, in
+    // the Grunt configuration with `server.targets`
+    var targets = grunt.util._.defaults(grunt.config('server.targets') || {}, {
+      app: ['temp', 'app'],
+      test: ['temp', 'app', 'test'],
+      dist: 'dist',
 
       // reload is a special one, acting like `app` but not opening the HTTP
       // server in default browser and forcing the port to LiveReload standard
-      // port.
-      reload: path.resolve('app')
-    };
+      // port (unless, it's set in user's gruntfile)
+      reload: ['temp', 'app']
+    });
 
     target = target || 'app';
 
@@ -233,16 +232,16 @@ module.exports = function(grunt) {
       return false;
     }
 
-    opts = {
+    opts = grunt.util._.defaults(grunt.config('server') || {}, {
       // prevent browser opening on `reload` target
       open: target !== 'reload',
       // and force 35729 port no matter what when on `reload` target
-      port: target === 'reload' ? 35729 : port,
+      port: target === 'reload' ? 35729 : 0xDAD,
       base: targets[target],
       inject: true,
       target: target,
       hostname: grunt.config('server.hostname') || 'localhost'
-    };
+    });
 
     grunt.helper('server', opts, cb);
 
@@ -252,7 +251,7 @@ module.exports = function(grunt) {
         }
     });
 
-    if ( (target === 'app') || ( target == 'test') ) {
+    if ( (target === 'app') || ( target === 'test') ) {
       // when serving app, make sure to delete the temp/ dir from w/e was
       // previously compiled here, and trigger compass / coffee mostly to make
       // sure, those files are compiled and not revved.
@@ -275,17 +274,12 @@ module.exports = function(grunt) {
     // also serve static files from the temp directory, and before the app
     // one (compiled assets takes precedence over same pathname within app/)
     middleware.push(connect.static(path.join(opts.base, '../temp')));
-    // Serve static files.
-    middleware.push(connect.static(opts.base))
-   // Make empty directories browsable.
-    middleware.push(connect.directory(opts.base))
 
-    if (opts.target === 'test') {
-      // We need to expose our code as well
-      middleware.push(connect.static(path.resolve('app')));
-      // Make empty directories browsable.
-      middleware.push(connect.directory(path.resolve('app')));
-    }
+    // handle base directories
+    var base = Array.isArray(opts.base) ? opts.base : [opts.base];
+    base.forEach(function(pathname) {
+      middleware.push(connect.static(pathname));
+    });
 
     middleware = middleware.concat([
       // Serve the livereload.js script
