@@ -1,13 +1,14 @@
 
-var fs       = require('fs');
-var path     = require('path');
-var spawn    = require('child_process').spawn;
-var rimraf   = require('rimraf');
-var mkdirp   = require('mkdirp');
-var which    = require('which');
-var grunt    = require('grunt');
-var async    = grunt.util.async;
-var Runnable = require('./runnable');
+var fs        = require('fs');
+var path      = require('path');
+var spawn     = require('child_process').spawn;
+var rimraf    = require('rimraf');
+var mkdirp    = require('mkdirp');
+var which     = require('which');
+var grunt     = require('grunt');
+var async     = grunt.util.async;
+var Runnable  = require('./runnable');
+var SuperTest = require('supertest/lib/test');
 
 // top level exports
 var helpers = module.exports;
@@ -37,6 +38,29 @@ helpers.run = function run(cmds, opts) {
   return new Runnable([process.execPath, yeomanpath, cmds].join(' '), opts);
 };
 
+// Facade to supertest Test object. Tweaked here to be able to assert against
+// yeoman spawned server. Might opt to just use grunt helper, and get back the
+// connect HTTP server, but we'll want to test server:* tasks behavior.
+helpers.request = function request(opts) {
+  opts = opts || {};
+
+  var applike = {};
+  applike.address = function() {
+    return { port: opts.port || 3501 };
+  };
+
+  // supertest uses "methods" module, but the few methods below are enough for
+  // our needs.
+  var obj = {};
+  ['get', 'post', 'put', 'head', 'delete'].forEach(function(method) {
+    var name = method === 'delete' ? 'del' : method;
+    obj[name] = function(path) {
+      return new SuperTest(applike, method, path);
+    };
+  });
+  return obj;
+};
+
 
 // Mocha before step to call out on every test suite, each every new test file.
 //
@@ -54,7 +78,7 @@ helpers.before = function before(done) {
   var gruntfile = helpers.gruntfile({ test: true });
   var compass = helpers.installed('compass').bind(this);
   var phantom = helpers.installed('phantomjs').bind(this);
-  var init = helpers.init(true);
+  var init = helpers.init();
   async.series([directory, gruntfile, compass, phantom, init], done);
 };
 
@@ -82,7 +106,7 @@ helpers.init = function init(redirect) {
       .prompt(/would you like/i)
       .prompt(/Do you need to make any changes to the above before continuing?/)
       // handle Overwrite ? prompt
-      .prompt(/Overwrite \?/, 'Y')
+      .prompt(/Overwrite \?/, 'a')
       // check exit code
       .expect(0)
       // run and done

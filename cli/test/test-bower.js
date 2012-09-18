@@ -12,25 +12,7 @@ var components = ['jquery', 'backbone'];
 
 describe('Bower install packages', function() {
 
-  before(helpers.directory('.test'));
-
-  before(helpers.gruntfile({
-    foo: {
-      bar: '<config.baz>'
-    }
-  }));
-
-  before(function(done) {
-    var yeoman = helpers.run('init --force');
-    yeoman
-      // enter '\n' for both prompts, and grunt confirm
-      .prompt(/would you like/i)
-      .prompt(/Do you need to make any changes to the above before continuing?/)
-      // check exit code
-      .expect(0)
-      // run and done
-      .end(done);
-  });
+  before(helpers.before);
 
   components.forEach(function(name) {
     it('should install ' + name + ' with yeoman install ' + name, function(done) {

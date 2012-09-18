@@ -1,10 +1,9 @@
 /*globals describe, it, before, after, beforeEach, afterEach */
-var fs = require('fs'),
-  path = require('path'),
-  grunt = require('grunt'),
-  assert = require('assert'),
-  helpers = require('./helpers'),
-  bower = require('bower').commands;
+
+var path    = require('path');
+var assert  = require('assert');
+var helpers = require('./helpers');
+var request = require('supertest');
 
 describe('Yeoman server', function() {
 
@@ -19,22 +18,22 @@ describe('Yeoman server', function() {
       }
     },
     watch: {
-      coffee: {
-        files: '<config:coffee.dist.src>',
-        tasks: 'coffee reload'
-      },
+      // coffee: {
+      //   files: '<config:coffee.dist.src>',
+      //   tasks: 'coffee reload'
+      // },
       compass: {
         files: [
-          'app/styles/**/*.{scss,sass}'
+          // 'app/styles/**/*.{scss,sass}'
         ],
         tasks: 'compass reload'
       },
       reload: {
         files: [
-          'app/*.html',
-          'app/styles/**/*.css',
-          'app/scripts/**/*.js',
-          'app/images/**/*'
+          // 'app/*.html',
+          // 'app/styles/**/*.css',
+          // 'app/scripts/**/*.js',
+          // 'app/images/**/*'
         ],
         tasks: 'reload'
       }
@@ -59,12 +58,72 @@ describe('Yeoman server', function() {
       this.server.end();
     });
 
-    it('should be able to be killed', function(done) {
+    after(function(done) {
       this.server.on('exit', function(err, code) {
         // kills, trigger code 1, thuse getting error here. Ignoring.
         done();
       });
       this.server.child.kill();
+    });
+
+    it('should serve "/"', function(done) {
+      helpers.request()
+        .get('/')
+        .expect('Content-Type', 'text/html')
+        .expect(200)
+        .expect(/<title>Mocha Spec Runner<\/title>/)
+        .end(done);
+    });
+
+    it('should serve "/livereload.js"', function(done) {
+      helpers.request()
+        .get('/livereload.js')
+        .expect('Content-Type', 'application/javascript')
+        .expect(200)
+        .end(done);
+    });
+
+    it('should serve "lib/chai.js"', function(done) {
+      helpers.request()
+        .get('/lib/chai.js')
+        .expect('Content-Type', 'application/javascript')
+        .expect(200)
+        .end(done);
+    });
+
+    it('should serve "lib/expect.js"', function(done) {
+      helpers.request()
+        .get('/lib/expect.js')
+        .expect('Content-Type', 'application/javascript')
+        .expect(200)
+        .end(done);
+    });
+
+    it('should serve "lib/mocha/mocha.js"', function(done) {
+      helpers.request()
+        .get('/lib/mocha/mocha.js')
+        .expect('Content-Type', 'application/javascript')
+        .expect(200)
+        .end(done);
+    });
+
+    it('should serve "lib/mocha/mocha.css"', function(done) {
+      helpers.request()
+        .get('/lib/mocha/mocha.css')
+        .expect('Content-Type', /text\/css/)
+        .expect(200)
+        .end(done);
+    });
+
+    // Will be fixed with PR #451
+    describe('serving app/ directory', function() {
+      it('should serve "scripts/main.js', function(done) {
+        helpers.request()
+          .get('/scripts/main.js')
+          .expect('Content-Type', 'application/javascript')
+          .expect(200)
+          .end(done);
+      });
     });
   });
 
