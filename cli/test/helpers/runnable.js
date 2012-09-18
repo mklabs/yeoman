@@ -1,3 +1,4 @@
+/*jshint latedef: false*/
 var spawn = require('child_process').spawn,
   events = require('events'),
   util = require('util');
@@ -52,15 +53,20 @@ Runnable.prototype.expect = function expect(a, b){
   if (typeof a === 'number') {
     this._status = a;
     // body
-    if (b && typeof b !== 'function') this.addExpectation(b);
-    else if(typeof b === 'function') this.end(b);
+    if (b && typeof b !== 'function') {
+      this.addExpectation(b);
+    } else if(typeof b === 'function') {
+      this.end(b);
+    }
     return this;
   }
 
   this.addExpectation(a);
 
   // callback
-  if (typeof b === 'function') this.end(b);
+  if (typeof b === 'function') {
+    this.end(b);
+  }
 
   return this;
 };
@@ -90,7 +96,9 @@ Runnable.prototype.end = function end(fn) {
   fn = fn || function() {};
 
   this.run(function(err, code, stdout, stderr) {
-    if(err) return fn(err, stdout, stderr);
+    if(err) {
+      return fn(err, stdout, stderr);
+    }
 
     self.emit('done');
     self.emit('end');
@@ -110,8 +118,13 @@ Runnable.prototype.run = function run(fn) {
     cmds = this._command,
     opts = this.options;
 
-  if(this._run) return fn(null, self.code, self.stdout, self.stderr);
-  if(!cmds) return this.emit(new Error('Cannot run without a command. Use .use!'));
+  if(this._run) {
+    return fn(null, self.code, self.stdout, self.stderr);
+  }
+
+  if(!cmds) {
+    return this.emit(new Error('Cannot run without a command. Use .use!'));
+  }
 
   cmds = cmds.split(' ');
 
@@ -148,7 +161,9 @@ Runnable.prototype.run = function run(fn) {
 
   child.on('exit', function(code) {
     self.code = code;
-    if(!code) return fn(null, code, self.stdout, self.stderr);
+    if(!code) {
+      return fn(null, code, self.stdout, self.stderr);
+    }
     var msg = 'Error executing "' + self._command + '". Code:' + code;
     var err = new Error(msg + '\n\n' + (self.stderr || self.stdout));
     err.code = code;
@@ -180,12 +195,14 @@ Runnable.prototype.assert = function assert(res, fn) {
       if (!expect.test(res.text)) {
         return errors.push(expected);
       }
-    } else if(!!~res.text.indexOf(expected)) {
+    } else if(res.text.indexOf(expected) === -1) {
       return errors.push(expected);
     }
   });
 
-  if(!errors.length) return fn(null, res);
+  if(!errors.length) {
+    return fn(null, res);
+  }
 
   var msg = 'Expected ' + util.inspect(res.text) + '\n to match:\n';
   msg += errors.map(function(expected) {
