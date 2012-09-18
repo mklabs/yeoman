@@ -129,11 +129,12 @@ Runnable.prototype.run = function run(fn) {
   cmds = cmds.split(' ');
 
   // Execute defined command with arguments and passed options
-  var child = spawn(cmds.shift(), cmds, opts),
+  var child = this.child = spawn(cmds.shift(), cmds, opts),
     write = child.stdin.write.bind(child.stdin);
 
   // mark this runnable as consumed
   this._run = true;
+  this.emit('started');
 
   // case of redirect options turned on, pipe back all stdout / stderr
   // output to parent process
@@ -162,13 +163,15 @@ Runnable.prototype.run = function run(fn) {
   child.on('exit', function(code) {
     self.code = code;
     if(!code) {
+      self.emit('exit', null, code, self.stdout, self.stderr);
       return fn(null, code, self.stdout, self.stderr);
     }
     var msg = 'Error executing "' + self._command + '". Code:' + code;
     var err = new Error(msg + '\n\n' + (self.stderr || self.stdout));
     err.code = code;
+    self.emit('exit', err, code, self.stdout, self.stderr);
     fn(err, code, self.stdout, self.stderr);
- });
+  });
 
   return this;
 };
