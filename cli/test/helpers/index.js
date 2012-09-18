@@ -5,6 +5,8 @@ var spawn    = require('child_process').spawn;
 var rimraf   = require('rimraf');
 var mkdirp   = require('mkdirp');
 var which    = require('which');
+var grunt    = require('grunt');
+var async    = grunt.util.async;
 var Runnable = require('./runnable');
 
 // top level exports
@@ -35,6 +37,60 @@ helpers.run = function run(cmds, opts) {
   return new Runnable([process.execPath, yeomanpath, cmds].join(' '), opts);
 };
 
+
+// Mocha before step to call out on every test suite, each every new test file.
+//
+// Will trigger the .directory(), .gruntfile(), and .run() with `yeoman init
+// --force` command. In addition, it also trigger the .installed() helper on
+// both phantomjs and compass executable, to set whether or not they are
+// available on the current system (and set their appropriate flag in mocha
+// context)
+//
+// Example:
+//
+//    before(helpers.before);
+helpers.before = function before(done) {
+  var directory = helpers.directory('.test');
+  var gruntfile = helpers.gruntfile({ test: true });
+  var compass = helpers.installed('compass').bind(this);
+  var phantom = helpers.installed('phantomjs').bind(this);
+  var init = helpers.init(true);
+  async.series([directory, gruntfile, compass, phantom, init], done);
+};
+
+// Basic helper for the default setup of running yeoman with the command `init
+// --force`, and dealing with the various prompt happening within the app
+// generator, asserts 0 exit code and and trigger the command. `done` is called
+// when the underlying process is exiting.
+//
+// It also setup `this.yeoman` runnable instance in the Mocha context, for
+// usage if needed within the test cases.
+//
+// - redirect   - Boolean flag that when set to true will redirect the output
+//                to the parent process. Set this to true if you want to see
+//                the yeoman executable output.
+// Example:
+//
+//     before(helpers.init());
+//
+// Returns a function suitable to use with mocha's before/after hooks.
+helpers.init = function init(redirect) {
+  return function(done) {
+    var yeoman = helpers.run('init --force', { redirect : redirect });
+    yeoman
+      // enter '\n' for both prompts, and grunt confirm
+      .prompt(/would you like/i)
+      .prompt(/Do you need to make any changes to the above before continuing?/)
+      // handle Overwrite ? prompt
+      .prompt(/Overwrite \?/, 'Y')
+      // check exit code
+      .expect(0)
+      // run and done
+      .end(done);
+  };
+};
+
+
 // Removes, creates and cd into the specified directory. If the current working
 // directory is the same as the specified one, then acts as a noop. Meant to be
 // used once per mocha suite.
@@ -47,12 +103,16 @@ helpers.run = function run(cmds, opts) {
 //
 // Returns a function suitable to use with mocha's before/after hooks.
 helpers.directory = function directory(dir) {
-  return function directory(done) {
+  return function(done) {
     process.chdir(path.join(__dirname, '../..'));
     rimraf(dir, function(err) {
-      if(err) return done(err);
+      if(err) {
+        return done(err);
+      }
       mkdirp(dir, function(err) {
-        if(err) return done(err);
+        if(err) {
+          return done(err);
+        }
         process.chdir(dir);
         done();
       });
@@ -86,13 +146,15 @@ helpers.directory = function directory(dir) {
 //
 //
 // Returns a function suitable to use with mocha hooks.
-helpers.yeoman = function (cmds, takeOver) {
+helpers.yeoman = function yeoman(cmds, takeOver) {
   var args = [yeomanpath].concat(cmds.split(' ')),
     options = { env: env };
 
-  if(takeOver) return spawn(process.execPath, args, options);
+  if(takeOver) {
+    return spawn(process.execPath, args, options);
+  }
 
-  return function yeoman(done) {
+  return function(done) {
     var child = this.child = spawn(process.execPath, args, options);
     var out = this.stdout = '';
     var err = this.stderr = '';
@@ -120,8 +182,9 @@ helpers.yeoman = function (cmds, takeOver) {
 //    }));
 //
 // Returns a function suitable to use with mocha hooks.
-helpers.gruntfile = function(options) {
-  return function gruntfile(done) {
+helpers.gruntfile = function gruntfile(options) {
+  options = options || {};
+  return function(done) {
     var config = 'grunt.initConfig(' + JSON.stringify(options, null, 2) + ');';
     config = config.split('\n').map(function(line) {
       return '  ' + line;
@@ -144,8 +207,8 @@ helpers.gruntfile = function(options) {
 //
 // Setups the relevant Boolean flag on the test context.
 //
-helpers.installed = function installed(command, cb) {
-  return function installed(done) {
+helpers.installed = function installed(command) {
+  return function(done) {
     var ctx = this;
     which(command, function(err) {
       ctx[command] = !err;

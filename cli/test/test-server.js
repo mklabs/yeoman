@@ -6,9 +6,9 @@ var fs = require('fs'),
   helpers = require('./helpers'),
   bower = require('bower').commands;
 
-describe('Bower install packages', function() {
+describe('Yeoman server', function() {
 
-  before(helpers.directory('.test'));
+  before(helpers.before);
 
   before(helpers.gruntfile({
     // Coffee to JS compilation
@@ -41,22 +41,9 @@ describe('Bower install packages', function() {
     }
   }));
 
-  before(function(done) {
-    var yeoman = helpers.run('init --force');
-    yeoman
-      // enter '\n' for both prompts, and grunt confirm
-      .prompt(/would you like/i)
-      .prompt(/Do you need to make any changes to the above before continuing?/)
-      // check exit code
-      .expect(0)
-      // run and done
-      .end(done);
-  });
-
-
-  describe('server:test', function() {
+  describe('yeoman server:test', function() {
     before(function(done) {
-      this.server = helpers.run('server:test', { redirect: false });
+      this.server = helpers.run('server:test', { redirect: true });
       // this.server.on('started', done);
       // only go through next step when we detect waiting output
       // Callbacks won't fire since the underlying process doesn't exit
