@@ -25,6 +25,10 @@ module.exports = function(grunt) {
   // Possible improvment: expand after pkg#, trigger a call to bower.info(),
   // cache the results and expand to the list of available version.
   grunt.registerHelper('install:completion', function(env, cb) {
+    if(/^-/.test(env.last)) {
+      return cb(null, ['--save']);
+    }
+
     var done = function done(err, results) {
       if(err) {
         return cb(err);
@@ -64,10 +68,28 @@ module.exports = function(grunt) {
     });
   });
 
+  grunt.registerHelper('list:completion', function(env, cb) {
+    if(/^-/.test(env.last)) {
+      return cb(null, ['--paths', '--map']);
+    }
+  });
+
+  grunt.registerHelper('uninstall:completion', function(env, cb) {
+    if(/^-/.test(env.last)) {
+      return cb(null, ['--save']);
+    }
+  });
+
+  grunt.registerHelper('uninstall:completion', function(env, cb) {
+    if(/^-/.test(env.last)) {
+      return cb(null, ['--save']);
+    }
+  });
+
+  // Ls command is an alias to list
+  grunt.registerHelper('ls:completion', grunt.helper.bind({}, 'list:completion'));
 
   // Info command completion is the same as install.
-  grunt.registerHelper('info:completion', function(env, cb) {
-    grunt.helper('install:completion', env, cb);
-  });
+  grunt.registerHelper('info:completion', grunt.helper.bind({}, 'install:completion'));
 
 };

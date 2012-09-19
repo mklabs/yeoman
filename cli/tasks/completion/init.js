@@ -5,7 +5,9 @@ var generators = require('yeoman-generators');
 module.exports = function(grunt) {
 
   function grequire() {
-    if(grequire.cache) return grequire.cache;
+    if(grequire.cache) {
+      return grequire.cache;
+    }
     var generators = require('yeoman-generators');
     generators.setup(grunt);
     return generators;
@@ -15,6 +17,10 @@ module.exports = function(grunt) {
     var parts = env.last.split(':');
     env.prefix = parts.slice(0, -1).join(':');
     var basepath = path.join(__dirname, '../../node_modules/yeoman-generators');
+
+    if(/^-/.test(env.last)) {
+      return grunt.helper('init:options:completion', env, cb);
+    }
 
     var internals = grunt.helper('init:completion:list', basepath, env);
     // grunt.helper('init:completion:list', internals, env);
@@ -36,6 +42,28 @@ module.exports = function(grunt) {
     }
 
     return cb(null, results);
+  });
+
+
+  grunt.registerHelper('init:options:completion', function(env, cb) {
+    // get rid of the first "init", determine namespace
+    var namespace = env.words.slice(1)[0];
+    // if there is a namespace
+    if(/^-/.test(namespace)) {
+      return cb(null, ['--help']);
+    }
+
+    // now that we have the namespace, create the generator, read its options
+    var generator = grequire().create(namespace, [], grunt.cli.options, grunt.config());
+    if(!generator) {
+      return;
+    }
+
+    var opts = generator._options.map(function(o) {
+      return '--' + o.name;
+    });
+
+    return cb(null, opts);
   });
 
   // not a completion helper, used to look for generators, based on the provided
