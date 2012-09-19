@@ -40,11 +40,13 @@ module.exports = function(grunt) {
     command.line(process.argv)
       .on('error', grunt.fatal.bind(grunt.fail))
       .on('data', grunt.log.writeln.bind(grunt.log))
-      .on('end', function(){
+      .on('end', function(data) {
         if(args[0] === 'install' && directory) {
           grunt.helper('bower:copy', directory, cb);
         } else if(args[0] === 'uninstall' || args[0] === 'update' && directory) {
           grunt.helper('bower:sync', directory, cb);
+        } else if(args[0] === 'info') {
+          console.log(data);
         } else {
           cb();
         }
