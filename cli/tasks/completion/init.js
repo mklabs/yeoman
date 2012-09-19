@@ -69,8 +69,8 @@ module.exports = function(grunt) {
   // not a completion helper, used to look for generators, based on the provided
   // `basedir`.
   grunt.registerHelper('init:completion:list', function(basedir) {
-    return grequire().lookupHelp(basedir).map(function(gen) {
-      return gen.namespace;
+    return grequire().lookupHelp(basedir, [], {}, {}).map(function(gen) {
+      return gen.namespace.replace(/^yeoman/, '');
     });
   });
 
