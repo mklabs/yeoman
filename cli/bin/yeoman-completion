@@ -1,0 +1,66 @@
+#!/usr/bin/env node
+
+var fs = require('fs');
+var join = require('path').join;
+var args = process.argv.slice(2);
+
+var grunt = require('grunt');
+
+grunt.task.init(['init:completion']);
+grunt.task.loadTasks(join(__dirname, '../tasks/completion'));
+
+// parse out the env
+var env = parseEnv();
+
+// only one word, command completion
+if(env.words === 1) {
+  return complete('yeoman:completion', env);
+}
+
+var last;
+if(/:$/.test(env.last)) {
+  last = env.last.replace(/:$/, '');
+  return complete(last + ':completion', env);
+}
+
+function complete(name, env) {
+  if(!grunt.task._helpers[name]) return;
+  grunt.task._helpers[name].call(env, env, function(err, results) {
+    if(err) {
+      // ignore err, not showing with completion
+      console.error(err);
+      return;
+    }
+
+    log(results, env);
+  });
+}
+
+function parseEnv(args) {
+  args = args || process.argv.slice(2);
+
+  var env = {
+    args: args,
+    words: +process.env.COMP_CWORD,
+    point: +process.env.COMP_POINT,
+    line: process.env.COMP_LINE || ''
+  };
+
+  env.partial = env.line.substr(0, env.point);
+  env.last = env.line.split(' ').slice(-1).join('');
+  env.lastPartial = env.partial.split(' ').slice(-1).join('');
+  env.prev = env.line.split(' ').slice(0, -1).slice(-1)[0];
+  return env;
+}
+
+function log(arr, o, prefix) {
+  prefix = prefix || '';
+  arr = Array.isArray(arr) ? arr : [arr];
+  arr.filter(abbrev(o)).forEach(function(v) {
+    console.log(prefix + v);
+  });
+}
+
+function abbrev(o) { return function(it) {
+  return new RegExp('^' + o.last.replace(/^-/g, '')).test(it);
+}}

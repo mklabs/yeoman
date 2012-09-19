@@ -18,7 +18,8 @@
   "main": "./yeoman",
   "bin": {
     "yeoman": "./bin/yeoman",
-    "_yeomaninsight": "./bin/yeomaninsight.py"
+    "_yeomaninsight": "./bin/yeomaninsight.py",
+    "yeoman-completion": "./bin/yeoman-completion"
   },
   "directories": {
     "man": "./man"
