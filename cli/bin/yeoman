@@ -85,7 +85,7 @@ function init() {
   // yeoman update spine
   // yeoman lookup jquery
   // yeoman search jquery
-  if(/^install|^uninstall|^search|^list|^ls|^lookup|^update/.test(route)) {
+  if(/^install|^uninstall|^search|^list|^ls|^lookup|^update|^info/.test(route)) {
     cli.tasks = 'bower' + ':' + cmds.join(':');
   }
 

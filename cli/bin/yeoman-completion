@@ -20,9 +20,11 @@ if(args[0] !== '--') {
 var last = env.last;
 var parts = last.split(':').slice(0, -1);
 
-// install has special semantic, and don't follow the grunt pattern
-if(env.words[0] === 'install') {
-  return complete('install', env);
+// Bower commands have special semantic, and don't follow the grunt pattern.
+// Same for the init command, goes through yeoman-generators.
+var bowers = ['install', 'list', 'ls', 'uninstall', 'update', 'lookup', 'info', 'search'];
+if(bowers.indexOf(env.words[0]) !== -1 || env.words[0] === 'init') {
+  return complete(env.words[0], env);
 }
 
 // first word, list the top level completion helper, listing commands
@@ -45,8 +47,14 @@ function complete(name, env) {
       return;
     }
 
-    name = /yeoman|install/.test(name) ? '' : name + ':';
-    log(results, env, name);
+    var prefix = name + ':';
+    if(/yeoman|init/.test(name) || bowers.indexOf(name) !== -1) {
+      prefix = '';
+    }
+
+    // special case, if helpers have setup the prefix on `env`
+    prefix = env.prefix || prefix;
+    log(results, env, prefix);
   });
 }
 
