@@ -4,35 +4,28 @@ var util   = require('util');
 var which  = require('which');
 var yeoman = require('..');
 
-// ant build script has a nice notion of environment, this defaults to
-// production. And we only support env=prod for now.
-//
-// not implemented tasks (add noop waithing for their impl): manifest
-
 module.exports = function(grunt) {
 
-  // External grunt plugin:
+  // External grunt plugin
+  // ---------------------
   //
-  // - jasmine task: https://github.com/creynders/grunt-jasmine-task
-  //
-  // note: We need to use loadTasks instead of loadNpmTasks, otherwise will try
-  // to load relative to gruntfile node_modules, this would require user to
-  // install manually. So we load tasks specifically from our node_modules,
-  // with abs path.
-  //
-  grunt.loadTasks(join(__dirname, '../node_modules/grunt-jasmine-task/tasks'));
-  grunt.loadTasks(join(__dirname, '../node_modules/grunt-mocha/tasks'));
-  grunt.loadTasks(join(__dirname, '../node_modules/grunt-contrib-coffee/tasks'));
+  // We load tasks specifically from our node_modules, with abs path.
+  // grunt.loadTasks(join(__dirname, '../node_modules/grunt-jasmine-task/tasks'));
+  // grunt.loadTasks(join(__dirname, '../node_modules/grunt-mocha/tasks'));
+  // grunt.loadTasks(join(__dirname, '../node_modules/grunt-contrib-coffee/tasks'));
 
+  // Configuration system
+  // --------------------
+  //
   // Hook our own configuration system, and store the result of the
   // config-chain into `yeoman` prop in Grunt config.
   //
   // ... or merge the two configs?
-  grunt.config('yeoman', yeoman.config);
+  grunt.config('yeoman', yeoman.config.snapshot);
 
-  // now trigger a config.process. Grunt will iterate through each
-  // config prop, and try to process any String value with
-  // `grunt.template.process` and the actual config data.
+  // Now trigger a config.process. Grunt will iterate through each config prop,
+  // and try to process any String value with `grunt.template.process` and the
+  // actual config data.
   //
   //      yeoman: {
   //        paths: {
@@ -46,15 +39,21 @@ module.exports = function(grunt) {
   //
   // In addition, try to normalize paths, and avoid situation with:
   // `alternate/app/dir//./components`, by returning the result of
-  // path.join on each of these value. path.join should handle most
-  // cases nicely, but we might want to do only on values with some `/`
-  // in it (to limit friction)
+  // path.join on each of these value. `path.join()` should handle most cases
+  // nicely, but we might want to do only on values with some `/` in it (to
+  // limit friction)
   var conf = grunt.util.recurse(grunt.config.process(), function(value) {
-    if (typeof value !== 'string') { return value; }
-    return join(value);
+    return typeof value === 'string' ? join(value) : value;
   });
 
-  // update grunt's config with the result
+  // We also need to go through each object keys, to handle `key:value`
+  // configuration where the `key` part holds sensitive informations about
+  // directories, like for the coffee & css tasks.
+  //
+  // This works by reference, meaning `conf` is updated on relevant keys.
+  yeoman.config.processKeys(conf);
+
+  // Finally, update grunt's config with the result
   grunt.initConfig(conf);
 
   // build targets: these are equivalent to grunt alias except that we defined

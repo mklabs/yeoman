@@ -12,11 +12,10 @@ describe('yeoman config', function() {
 
   before(helpers.directory('.test'));
 
-  // create a dummy gruntfile in .test, before the app generator, to
-  // prevent it walking to our Gruntfile.
+  // Create the initial gruntfile. This is the new look of yeoman Gruntfile(s),
+  // will probably need to update each generator (that is actually generating a
+  // Gruntfile, eg. most of them).
   before(helpers.gruntfile({
-
-    stuff: 'yay',
 
     // specify an alternate install location for Bower
     bower: {
@@ -27,15 +26,68 @@ describe('yeoman config', function() {
     coffee: {
       compile: {
         files: {
-          'temp/scripts/*.js': 'app/scripts/**/*.coffee'
+          '<%= yeoman.paths.temp %>/<%= yeoman.paths.scripts %>/*.js': '<%= yeoman.paths.app %>/<%= yeoman.paths.scripts %>/**/*.coffee'
         },
         options: {
-          basePath: 'app/scripts'
+          basePath: '<%= yeoman.paths.app %>/<%= yeoman.paths.scripts %>'
+        }
+      },
+    },
+
+    compass: {
+      dist: {
+        options: {
+          css_dir: '<%= yeoman.paths.temp %>/<%= yeoman.paths.styles %>',
+          sass_dir: '<%= yeoman.paths.app %>/<%= yeoman.paths.styles %>',
+          images_dir: '<%= yeoman.paths.app %>/<%= yeoman.paths.images %>',
+          javascripts_dir: '<%= yeoman.paths.temp %>/<%= yeoman.paths.scripts %>',
+          force: true
         }
       }
+    },
+
+    mocha: {
+      all: ['<%= yeoman.paths.test %>/**/*.html']
+    },
+
+    watch: {
+      coffee: {
+        files: '<%= yeoman.paths.app %>/<%= yeoman.paths.scripts %>/**/*.coffee',
+        tasks: 'coffee reload'
+      },
+
+      compass: {
+        files: ['<%= yeoman.paths.app %>/<%= yeoman.paths.styles %>/**/*.{scss,sass}'],
+        tasks: 'compass reload'
+      },
+
+      reload: {
+        files: [
+          '<%= yeoman.paths.app %>/*.html',
+          '<%= yeoman.paths.app %>/<%= yeoman.paths.styles %>/**/*.css',
+          '<%= yeoman.paths.app %>/<%= yeoman.paths.scripts %>/**/*.js',
+          '<%= yeoman.paths.app %>/<%= yeoman.paths.images %>/**/*'
+        ],
+        tasks: 'reload'
+      },
+
+    },
+
+    lint: {
+      files: [
+        'Gruntfile.js',
+        '<%= yeoman.paths.app %>/<%= yeoman.paths.scripts %>/**/*.js',
+        '<%= yeoman.paths.test %>/**/*.js'
+      ]
+    },
+
+    staging: '<%= yeoman.paths.temp %>',
+    output: '<%= yeoman.paths.dist %>',
+
+    css: {
+      '<%= yeoman.paths.styles %>/main.css': ['<%= yeoman.paths.styles %>/**/*.css']
     }
 
-    // etc. etc. todo
   }));
 
   describe('Grunt config should', function() {
@@ -48,9 +100,6 @@ describe('yeoman config', function() {
       // load our internal tasks, to specifically register helper we need to
       // trigger here
       grunt.task.loadTasks(path.join(__dirname, '../tasks'));
-
-      // debug... to be removed
-      console.log('The whole grunt config looks like this', grunt.config());
 
       assert.deepEqual(grunt.config('bower'), {
         dir: 'app/components'
@@ -100,21 +149,15 @@ describe('yeoman config', function() {
       assert.deepEqual(grunt.config('lint.files'), [
         'Gruntfile.js',
         'app/scripts/**/*.js',
-        'spec/**/*.js'
+        'test/**/*.js'
       ]);
 
       assert.equal(grunt.config('staging'), 'temp');
 
       assert.equal(grunt.config('output'), 'dist');
 
-      assert.deepEqual(grunt.config('mocha'), {
-        all: ['test/**/*.html']
-      });
       assert.deepEqual(grunt.config('css'), {
         'styles/main.css': ['styles/**/*.css']
-      });
-      assert.deepEqual(grunt.config('mocha'), {
-        all: ['test/**/*.html']
       });
       assert.deepEqual(grunt.config('mocha'), {
         all: ['test/**/*.html']

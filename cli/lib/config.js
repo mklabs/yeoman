@@ -29,17 +29,26 @@ Object.keys(grunt.cli.options).forEach(function(key) {
   opts[key] = grunt.cli.options[key];
 });
 
-// Add our own API to ConfigChain (mainly we miss the ability to return
-// a single object with all resolved configuration properties)
-cc.ConfigChain.prototype.all = function() {
-  console.log('wait what', this);
-};
-
-
 // how do we handle defaults?
 var defaults = {};
 
-// build and expose the chain
+// path defaults
+defaults.paths = {
+  app        : 'app',
+  temp       : 'temp',
+  dist       : 'dist',
+  test       : 'test',
+  components : 'components',
+
+  // below paths are used relative to `app`
+  scripts    : 'scripts',
+  styles     : 'styles',
+  images     : 'images',
+  vendor     : 'scripts/vendor'
+};
+
+// build and expose the chain, access `.snapshot` to get back the result of the
+// configuration chain.
 var config = module.exports = cc(
   opts,
   cc.env('YEOMAN_'),
@@ -53,5 +62,41 @@ var config = module.exports = cc(
   join(home, '.config/yeoman/config'),
   // how to handle defaults?
   defaults
-).snapshot;
+);
+
+// Get config data, recurse through objects processing keys as a template if
+// necessary.
+//
+// Some tasks (like coffee & css) relies on `key:value` configuration to map
+// `destination:sources` values.
+config.processKeys = function processKeys(value, data) {
+  if(Array.isArray(value)) { return value; }
+  if(typeof value !== 'object') { return value; }
+
+  // when data is not provided, we use the given value as template data (which
+  // is the first object provided on first run)
+  data = data || value;
+  Object.keys(value).forEach(function(k) {
+    var val = value[k];
+    var processed = grunt.template.process(k, data);
+    if(k !== processed) {
+      value[processed] = val;
+      delete value[k];
+    }
+
+    // recurse, while carrying on the data object.
+    processKeys(val, data);
+  });
+
+  return value;
+};
+
+// shallow clone helper
+config.clone = function clone(o) {
+  var cloned = {};
+  Object.keys(o).forEach(function(k) {
+    cloned[k] = o[k];
+  });
+  return cloned;
+};
 
