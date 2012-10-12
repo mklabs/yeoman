@@ -11,3 +11,6 @@
 --globals WeakMap
 --globals Map
 --globals Set
+
+--globals render
+--globals rboolean
