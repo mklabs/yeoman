@@ -1,9 +1,8 @@
 
-var fs = require('fs'),
-  path = require('path'),
-  colors = require('colors'),
-  yeoman = require('../../'),
-  grunt = require('grunt');
+var fs     = require('fs');
+var path   = require('path');
+var yeoman = require('../..');
+var grunt  = require('grunt');
 
 // top level export
 var template = module.exports;
@@ -26,14 +25,6 @@ if(!name && !opts.help) {
 // Basic template description.
 template.description = 'Init a new project or components';
 
-// warnOn, specifics to resolved generator.  Any existing file or directory
-// matching this wildcard will cause a warning.
-//
-// Bypass on --help
-if(!opts.help) {
-  template.warnOn = yeoman.generators.warnOn(grunt);
-}
-
 // Template-specific notes to be displayed before question prompts.
 template.notes = '\n'; //... More notes to come here ...'.yellow;
 
@@ -46,7 +37,6 @@ template.notes = '\n'; //... More notes to come here ...'.yellow;
 // Handles the specific case of default generator on `init` (without generator
 // name).
 template.template = function _template(grunt, init, cb) {
-
   // delegate the groundwork of scaffolding to the generator layer
-  return yeoman.generators.init(grunt);
+  return yeoman.generators.init(grunt, null, yeoman.config.snapshot);
 };

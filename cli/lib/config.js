@@ -30,10 +30,7 @@ Object.keys(grunt.cli.options).forEach(function(key) {
 });
 
 // how do we handle defaults?
-var defaults = {};
-
-// path defaults
-defaults.paths = {
+var defaults = {
   app        : 'app',
   temp       : 'temp',
   dist       : 'dist',
@@ -76,7 +73,7 @@ config.processKeys = function processKeys(value, data) {
   // when data is not provided, we use the given value as template data (which
   // is the first object provided on first run)
   data = data || value;
-  Object.keys(value).forEach(function(k) {
+  Object.keys(value || {}).forEach(function(k) {
     var val = value[k];
     var processed = grunt.template.process(k, data);
     if(k !== processed) {
