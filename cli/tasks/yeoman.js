@@ -1,7 +1,8 @@
-var fs    = require('fs');
-var join  = require('path').join;
-var util  = require('util');
-var which = require('which');
+var fs     = require('fs');
+var join   = require('path').join;
+var util   = require('util');
+var which  = require('which');
+var yeoman = require('..');
 
 // ant build script has a nice notion of environment, this defaults to
 // production. And we only support env=prod for now.
@@ -22,6 +23,39 @@ module.exports = function(grunt) {
   grunt.loadTasks(join(__dirname, '../node_modules/grunt-jasmine-task/tasks'));
   grunt.loadTasks(join(__dirname, '../node_modules/grunt-mocha/tasks'));
   grunt.loadTasks(join(__dirname, '../node_modules/grunt-contrib-coffee/tasks'));
+
+  // Hook our own configuration system, and store the result of the
+  // config-chain into `yeoman` prop in Grunt config.
+  //
+  // ... or merge the two configs?
+  grunt.config('yeoman', yeoman.config);
+
+  // now trigger a config.process. Grunt will iterate through each
+  // config prop, and try to process any String value with
+  // `grunt.template.process` and the actual config data.
+  //
+  //      yeoman: {
+  //        paths: {
+  //          app: 'i/dont/like/the/default/app/location'
+  //        }
+  //      }
+  //
+  //      example: {
+  //        files: ['<%= yeoman.paths.app %>']
+  //      }
+  //
+  // In addition, try to normalize paths, and avoid situation with:
+  // `alternate/app/dir//./components`, by returning the result of
+  // path.join on each of these value. path.join should handle most
+  // cases nicely, but we might want to do only on values with some `/`
+  // in it (to limit friction)
+  var conf = grunt.util.recurse(grunt.config.process(), function(value) {
+    if (typeof value !== 'string') { return value; }
+    return join(value);
+  });
+
+  // update grunt's config with the result
+  grunt.initConfig(conf);
 
   // build targets: these are equivalent to grunt alias except that we defined
   // a single task and use arguments to trigger the appropriate target
