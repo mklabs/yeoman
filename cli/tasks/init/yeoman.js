@@ -3,8 +3,7 @@ var fs = require('fs'),
   path = require('path'),
   colors = require('colors'),
   yeoman = require('../../'),
-  grunt = require('grunt'),
-  utils = yeoman.utils;
+  grunt = require('grunt');
 
 // top level export
 var template = module.exports;

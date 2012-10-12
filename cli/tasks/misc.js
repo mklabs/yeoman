@@ -1,17 +1,13 @@
 
-var fs = require('fs'),
-  path = require('path'),
-  utils = require('../').utils,
-  Ignore = require('fstream-ignore'),
-  fstream = require('fstream');
+var fs      = require('fs');
+var path    = require('path');
+var Ignore  = require('fstream-ignore');
+var fstream = require('fstream');
+var rimraf  = require('rimraf');
+var mkdirp  = require('mkdirp');
+
 
 module.exports = function(grunt) {
-
-  grunt.registerTask('intro', 'Kindly inform the developer about the impending magic', function() {
-    var intro = grunt.config('intro') || '';
-    intro = Array.isArray(intro) ? intro : [intro];
-    grunt.log.writeln(intro.join(utils.linefeed));
-  });
 
   grunt.registerMultiTask('mkdirs', 'Prepares the build dirs', function() {
     this.requires('clean');
@@ -85,9 +81,9 @@ module.exports = function(grunt) {
   //
   grunt.registerHelper('rimraf', function(dir, cb) {
     if ( typeof cb !== 'function' ) {
-      return utils.rimraf.sync( dir );
+      return rimraf.sync( dir );
     }
-    utils.rimraf(dir, cb);
+    rimraf(dir, cb);
   });
 
   //
@@ -98,13 +94,12 @@ module.exports = function(grunt) {
   //
   grunt.registerHelper('mkdir', function(dir, cb) {
     if ( typeof cb !== 'function' ) {
-      return utils.mkdirp.sync( dir );
+      return mkdirp.sync( dir );
     }
-    utils.mkdirp(dir, cb);
+    mkdirp(dir, cb);
   });
 
 
-  //
   // **copy** helper uses [fstream-ignore](https://github.com/isaacs/fstream-ignore)
   // to copy the files under the `src` (usually current directory) to the specified
   // `dest`, optionnaly ignoring files specified by the `ignores` list of files.
