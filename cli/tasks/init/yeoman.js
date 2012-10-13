@@ -38,5 +38,9 @@ template.notes = '\n'; //... More notes to come here ...'.yellow;
 // name).
 template.template = function _template(grunt, init, cb) {
   // delegate the groundwork of scaffolding to the generator layer
-  return yeoman.generators.init(grunt, null, yeoman.config.snapshot);
+  try {
+    yeoman.generators.init(grunt, null, yeoman.config.snapshot);
+  } catch(e) {
+    grunt.fatal(e);
+  }
 };
