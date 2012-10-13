@@ -1,7 +1,6 @@
-var url     = require('url');
-var path    = require('path');
-var join    = path.join;
-var fstream = require('fstream');
+var url  = require('url');
+var path = require('path');
+var join = path.join;
 
 module.exports = function(grunt) {
 
@@ -107,24 +106,9 @@ module.exports = function(grunt) {
       }))
       .subhead('Writing to ' + options.output + '...');
 
-    var confess = grunt.util.spawn({
-      cmd: 'phantomjs',
-      args: args
-    }, function(err) {
-      if( err ) {
-        grunt.fail.fatal(err);
-      }
-    });
-
-    // redirect back stderr output
-    confess.stderr.pipe( process.stderr );
-
-    // same for stdout, plus file write to final manifest file
-    confess.stdout.pipe( process.stdout );
-
-    confess.stdout.pipe( fstream.Writer(options.output) ).on('close', function() {
-      grunt.log.ok();
-      done();
+    var confess = grunt.helper('phantomjs', {
+      args: args,
+      done: done
     });
   });
 };
