@@ -198,7 +198,10 @@ module.exports = function(grunt) {
 
   // Server
   // ------
-  grunt.registerTask('server', 'config:paths yeoman-server');
+  grunt.registerTask('server', function(target) {
+    target = target || 'app';
+    grunt.task.run('config:paths yeoman-server:' + target);
+  });
 
   // Note: yeoman-server alone will exit prematurly unless `this.async()` is
   // called. The task is designed to work alongside the `watch` task.
