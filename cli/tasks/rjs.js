@@ -7,8 +7,15 @@ module.exports = function(grunt) {
   grunt.task.registerTask('rjs', 'Optimizes javascript that actually is built with requirejs.', function () {
     var options = grunt.config(this.name) || {};
 
+    grunt.util._.defaults(options, {
+      mainFile: 'index.html'
+    });
+
+    // application directory
+    var appdir = grunt.config('yeoman.app');
+
     // Verify if the application contains a data-main attribute
-    var appIndexPath  = path.resolve('mainFile' in options ? '../app/' + options.mainFile : '../app/index.html');
+    var appIndexPath = path.resolve('../', appdir, options.mainFile);
     var indexBuffer = fs.readFileSync(appIndexPath, 'utf8');
     var hasDataMain = (indexBuffer.match(/data-main=['"]([^'"]+)['"]/));
 

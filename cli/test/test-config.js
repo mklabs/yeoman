@@ -116,14 +116,13 @@ describe('yeoman config', function() {
 
   describe('Grunt config should', function() {
 
-    it('match our default values', function() {
-      // Initialize task system so that grunt internally read / init the
-      // config.
+    before(function(done) {
       grunt.task.init([]);
-
-      // load our internal tasks, to specifically register helper we need to
-      // trigger here
       grunt.task.loadTasks(path.join(__dirname, '../tasks'));
+      grunt.tasks(['config:paths'], {}, done);
+    });
+
+    it('match our default values', function() {
 
       assertConfig(grunt.config('bower'), {
         dir: 'app/components'
@@ -176,9 +175,9 @@ describe('yeoman config', function() {
         'test/**/*.js'
       ]);
 
-      assert.equal(grunt.config('staging'), 'temp');
+      assertConfig(grunt.config('staging'), 'temp');
 
-      assert.equal(grunt.config('output'), 'dist');
+      assertConfig(grunt.config('output'), 'dist');
 
       assertConfig(grunt.config('mocha'), {
         all: ['test/**/*.html']
