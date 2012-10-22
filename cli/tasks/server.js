@@ -200,7 +200,7 @@ module.exports = function(grunt) {
   // ------
   grunt.registerTask('server', function(target) {
     target = target || 'app';
-    grunt.task.run('config:paths yeoman-server:' + target);
+    grunt.task.run('yeoman-server:' + target);
   });
 
   // Note: yeoman-server alone will exit prematurly unless `this.async()` is

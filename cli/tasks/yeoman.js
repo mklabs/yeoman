@@ -14,51 +14,6 @@ module.exports = function(grunt) {
   grunt.loadTasks(join(__dirname, '../node_modules/grunt-mocha/tasks'));
   grunt.loadTasks(join(__dirname, '../node_modules/grunt-contrib-coffee/tasks'));
 
-  // Configuration system
-  // --------------------
-  //
-  // Hook our own configuration system, and store the result of the
-  // config-chain into `yeoman` prop in Grunt config.
-  //
-  // ... or merge the two configs?
-  grunt.registerTask('config:paths', 'process and prepare yeoman configuration', function() {
-    grunt.config('yeoman', yeoman.config.snapshot);
-
-    // Now trigger a config.process. Grunt will iterate through each config prop,
-    // and try to process any String value with `grunt.template.process` and the
-    // actual config data.
-    //
-    //      yeoman: {
-    //        paths: {
-    //          app: 'i/dont/like/the/default/app/location'
-    //        }
-    //      }
-    //
-    //      example: {
-    //        files: ['<%= yeoman.paths.app %>']
-    //      }
-    //
-    // In addition, try to normalize paths, and avoid situation with:
-    // `alternate/app/dir//./components`, by returning the result of
-    // path.join on each of these value. `path.join()` should handle most cases
-    // nicely, but we might want to do only on values with some `/` in it (to
-    // limit friction)
-    var conf = grunt.util.recurse(grunt.config.process(), function(value) {
-      return typeof value === 'string' ? join(value) : value;
-    });
-
-    // We also need to go through each object keys, to handle `key:value`
-    // configuration where the `key` part holds sensitive informations about
-    // directories, like for the coffee & css tasks.
-    //
-    // This works by reference, meaning `conf` is updated on relevant keys.
-    yeoman.config.processKeys(conf);
-
-    // Finally, update grunt's config with the result
-    grunt.initConfig(conf);
-  });
-
-
   // build targets: these are equivalent to grunt alias except that we defined
   // a single task and use arguments to trigger the appropriate target
   //
@@ -97,7 +52,7 @@ module.exports = function(grunt) {
       return false;
     }
 
-    var tasks = ['config:paths clean coffee compass mkdirs', targets[target], 'copy time'].join(' ');
+    var tasks = ['clean coffee compass mkdirs', targets[target], 'copy time'].join(' ');
 
     // Conditionally remove compass / manifest task if either compass or
     // phantomjs binary is missing. Done only for `test` target (specifically

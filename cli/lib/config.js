@@ -13,6 +13,7 @@ var path    = require('path');
 var join    = path.join;
 var resolve = path.resolve;
 var merge   = require('./utils/lodash').merge;
+var parse   = require('./utils/parse');
 
 // home dir, windows is the exception to deal with.
 var home = process.env[process.platform === 'win32' ? 'USERPROFILE' : 'HOME'];
@@ -51,58 +52,23 @@ var config = module.exports = cc(
   opts,
   cc.env('YEOMAN_'),
   opts.config,
-  resolve('.yeomanrc'),
-  resolve('config/yeoman'),
-  resolve('project.json'),
-  join(home, '.yeomanrc'),
-  join(home, '.yeoman/config'),
-  join(home, '.config/yeoman'),
-  join(home, '.config/yeoman/config'),
+  parse(resolve('.yeomanrc')),
+  parse(resolve('config/yeoman')),
+  parse(resolve('project.json')),
+  parse(join(home, '.yeomanrc')),
+  parse(join(home, '.yeoman/config')),
+  parse(join(home, '.config/yeoman')),
+  parse(join(home, '.config/yeoman/config')),
   // how to handle defaults?
   defaults
 );
-
-// Get config data, recurse through objects processing keys as a template if
-// necessary.
-//
-// Some tasks (like coffee & css) relies on `key:value` configuration to map
-// `destination:sources` values.
-config.processKeys = function processKeys(value, data) {
-  if(Array.isArray(value)) { return value; }
-  if(typeof value !== 'object') { return value; }
-
-  // when data is not provided, we use the given value as template data (which
-  // is the first object provided on first run)
-  data = data || value;
-  Object.keys(value || {}).forEach(function(k) {
-    var val = value[k];
-    var processed = grunt.template.process(k, data);
-    if(k !== processed) {
-      value[processed] = val;
-      delete value[k];
-    }
-
-    // recurse, while carrying on the data object.
-    processKeys(val, data);
-  });
-
-  return value;
-};
-
-// shallow clone helper
-config.clone = function clone(o) {
-  var cloned = {};
-  Object.keys(o).forEach(function(k) {
-    cloned[k] = o[k];
-  });
-  return cloned;
-};
 
 // Redefine the "snapshot" property to do a deep extend / merge (using lodash
 // merge method) of the configuration chain. We loose the chain based on
 // prototype though.
 Object.defineProperty(config, 'snapshot', {
     get: function() {
+      console.log('snap', this.list);
       var chain = [{}].concat(this.list.reverse());
       return merge.apply(null, chain);
     }
