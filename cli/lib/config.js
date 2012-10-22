@@ -12,6 +12,7 @@ var cc      = require('config-chain');
 var path    = require('path');
 var join    = path.join;
 var resolve = path.resolve;
+var merge   = require('./utils/lodash').merge;
 
 // home dir, windows is the exception to deal with.
 var home = process.env[process.platform === 'win32' ? 'USERPROFILE' : 'HOME'];
@@ -97,3 +98,12 @@ config.clone = function clone(o) {
   return cloned;
 };
 
+// Redefine the "snapshot" property to do a deep extend / merge (using lodash
+// merge method) of the configuration chain. We loose the chain based on
+// prototype though.
+Object.defineProperty(config, 'snapshot', {
+    get: function() {
+      var chain = [{}].concat(this.list.reverse());
+      return merge.apply(null, chain);
+    }
+});
